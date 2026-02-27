@@ -47,7 +47,9 @@ export async function GET(req: NextRequest) {
                 thumbnail: p.image_urls?.[0] || null,
             }));
 
-            return NextResponse.json({ markers, total: markers.length });
+            const res = NextResponse.json({ markers, total: markers.length });
+            res.headers.set("Cache-Control", "public, s-maxage=15, stale-while-revalidate=30");
+            return res;
         }
 
         // List mode: paginated
@@ -62,7 +64,9 @@ export async function GET(req: NextRequest) {
             Place.countDocuments(query),
         ]);
 
-        return NextResponse.json({ places, total, page, pages: Math.ceil(total / PAGE_SIZE) });
+        const res = NextResponse.json({ places, total, page, pages: Math.ceil(total / PAGE_SIZE) });
+        res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
+        return res;
     } catch {
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
     }

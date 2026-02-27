@@ -18,14 +18,14 @@ export async function GET(req: NextRequest) {
             Place.find(baseFilter)
                 .sort({ score: -1, upvotes: -1 })
                 .limit(FEED_LIMIT)
-                .select("name category score image_urls tags city visit_confirmations")
+                .select("name category score image_urls tags city visit_confirmations upvotes downvotes")
                 .lean(),
 
             // Recently Added
             Place.find(baseFilter)
                 .sort({ created_at: -1 })
                 .limit(FEED_LIMIT)
-                .select("name category score image_urls tags city created_at")
+                .select("name category score image_urls tags city created_at upvotes downvotes")
                 .lean(),
 
             // Hidden Gems: high score, low vote count
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
             })
                 .sort({ score: -1 })
                 .limit(FEED_LIMIT)
-                .select("name category score image_urls tags city")
+                .select("name category score image_urls tags city upvotes downvotes")
                 .lean(),
 
             // Active Discussions: most recent comments
@@ -73,7 +73,9 @@ export async function GET(req: NextRequest) {
             ]),
         ]);
 
-        return NextResponse.json({ trending, recent, hiddenGems, activeDiscussions });
+        const res = NextResponse.json({ trending, recent, hiddenGems, activeDiscussions });
+        res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
+        return res;
     } catch {
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
     }
