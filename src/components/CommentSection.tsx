@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconUp, IconChat } from "@/components/Icons";
 
 interface Comment {
     _id: string;
@@ -155,7 +156,7 @@ export default function CommentSection({ placeId }: CommentSectionProps) {
                             <p className="comment-text">{comment.text}</p>
                             <div className="comment-actions">
                                 <button className="comment-action-btn" onClick={() => handleUpvote(comment._id)}>
-                                    ▲ {comment.upvotes > 0 ? comment.upvotes : ""}
+                                    <IconUp size={12} /> {comment.upvotes > 0 ? comment.upvotes : ""}
                                 </button>
                             </div>
                         </div>

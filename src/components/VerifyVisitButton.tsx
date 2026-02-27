@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconCheck } from "@/components/Icons";
 
 interface VerifyVisitButtonProps {
     placeId: string;
@@ -38,8 +39,10 @@ export default function VerifyVisitButton({ placeId, initialConfirmed, confirmat
             className={`btn ${confirmed ? "btn-primary" : "btn-secondary"} btn-sm`}
             onClick={handleConfirm}
             disabled={confirmed || loading}
+            style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
         >
-            ✔ {confirmed ? "Verified" : "I visited recently"}{count > 0 ? ` (${count})` : ""}
+            <IconCheck size={14} />
+            {confirmed ? "Verified" : "I visited recently"}{count > 0 ? ` (${count})` : ""}
         </button>
     );
 }

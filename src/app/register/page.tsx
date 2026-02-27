@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconWarning } from "@/components/Icons";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -38,8 +39,9 @@ export default function RegisterPage() {
             <div className="auth-card">
                 <h1 className="auth-title">Create account</h1>
 
-                <div className="auth-warning">
-                    ⚠️ <strong>Remember your password!</strong> There is no password reset or recovery system. If you forget your password, your account cannot be recovered.
+                <div className="auth-warning" style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <span style={{ flexShrink: 0, marginTop: 2 }}><IconWarning size={16} color="var(--warning)" /></span>
+                    <span><strong>Remember your password!</strong> There is no password reset or recovery system. If you forget your password, your account cannot be recovered.</span>
                 </div>
 
                 <form onSubmit={handleSubmit}>

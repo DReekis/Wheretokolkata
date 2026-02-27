@@ -6,6 +6,7 @@ import VoteButtons from "@/components/VoteButtons";
 import SaveButton from "@/components/SaveButton";
 import VerifyVisitButton from "@/components/VerifyVisitButton";
 import CommentSection from "@/components/CommentSection";
+import { IconCheck, IconClock, IconCompass } from "@/components/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { getScoreLabel, getScorePercentage } from "@/lib/ranking";
 
@@ -82,7 +83,7 @@ export default function PlaceDetailPage() {
             <div className="page">
                 <div className="content-container">
                     <div className="empty-state">
-                        <div className="empty-state-icon">😔</div>
+                        <div className="empty-state-icon"><IconCompass size={48} color="var(--text-muted)" /></div>
                         <p className="empty-state-title">{error || "Place not found"}</p>
                     </div>
                 </div>
@@ -122,8 +123,8 @@ export default function PlaceDetailPage() {
 
                     {/* Verification */}
                     {place.visit_confirmations > 0 && (
-                        <div className="place-verification">
-                            ✔ Verified by {place.visit_confirmations} visitor{place.visit_confirmations !== 1 ? "s" : ""}
+                        <div className="place-verification" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <IconCheck size={16} color="var(--success)" /> Verified by {place.visit_confirmations} visitor{place.visit_confirmations !== 1 ? "s" : ""}
                         </div>
                     )}
 
@@ -138,8 +139,8 @@ export default function PlaceDetailPage() {
 
                     {/* Best time */}
                     {place.best_time && (
-                        <p style={{ fontSize: "var(--font-size-sm)", color: "var(--text-muted)", marginTop: "var(--space-2)" }}>
-                            🕐 Best time: {place.best_time}
+                        <p style={{ fontSize: "var(--font-size-sm)", color: "var(--text-muted)", marginTop: "var(--space-2)", display: "flex", alignItems: "center", gap: "4px" }}>
+                            <IconClock size={14} /> Best time: {place.best_time}
                         </p>
                     )}
 

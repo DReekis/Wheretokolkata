@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
 import LocationSearch from "@/components/LocationSearch";
+import { IconMapPin } from "@/components/Icons";
 import { CATEGORIES } from "@/lib/constants";
 import { CITY_CONFIG, type SupportedCity } from "@/lib/cities";
 
@@ -192,7 +193,7 @@ export default function AddPlacePage() {
                         </div>
                         {coords && (
                             <span className="form-hint" style={{ marginTop: "var(--space-1)" }}>
-                                📍 {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
+                                <IconMapPin size={14} /> {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
                             </span>
                         )}
                         <span className="form-hint">Search above, use GPS, or click the map to fine-tune</span>

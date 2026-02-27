@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IconCheck, IconUp, IconDown } from "@/components/Icons";
 
 interface PlaceCardProps {
     _id: string;
@@ -45,13 +46,13 @@ export default function PlaceCard({ _id, name, category, score, image_urls, tags
                 </div>
                 <h3 className="place-card-name">{name}</h3>
                 {totalVotes > 0 && (
-                    <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)", margin: "2px 0" }}>
-                        ▲ {upvotes || 0} · ▼ {downvotes || 0}
+                    <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)", margin: "2px 0", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <IconUp size={12} /> {upvotes || 0} <IconDown size={12} /> {downvotes || 0}
                     </p>
                 )}
                 {visit_confirmations && visit_confirmations > 0 ? (
-                    <p className="place-card-desc" style={{ color: "var(--success)", fontSize: "var(--font-size-xs)" }}>
-                        ✔ Verified by {visit_confirmations} visitor{visit_confirmations !== 1 ? "s" : ""}
+                    <p className="place-card-desc" style={{ color: "var(--success)", fontSize: "var(--font-size-xs)", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <IconCheck size={12} color="var(--success)" /> Verified by {visit_confirmations} visitor{visit_confirmations !== 1 ? "s" : ""}
                     </p>
                 ) : null}
                 {tags && tags.length > 0 && (

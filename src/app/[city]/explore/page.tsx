@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import PlaceCard from "@/components/PlaceCard";
+import { IconTrending, IconRecent, IconGem, IconChat, IconCompass } from "@/components/Icons";
 
 interface Place {
     _id: string;
@@ -61,10 +62,10 @@ export default function ExplorePage() {
     }
 
     const sections = [
-        { title: "🔥 Trending Places", items: data?.trending },
-        { title: "🆕 Recently Added", items: data?.recent },
-        { title: "💎 Hidden Gems", items: data?.hiddenGems },
-        { title: "💬 Active Discussions", items: data?.activeDiscussions },
+        { title: "Trending Places", icon: <IconTrending size={20} color="var(--danger)" />, items: data?.trending },
+        { title: "Recently Added", icon: <IconRecent size={20} color="var(--accent)" />, items: data?.recent },
+        { title: "Hidden Gems", icon: <IconGem size={20} color="var(--cat-hidden)" />, items: data?.hiddenGems },
+        { title: "Active Discussions", icon: <IconChat size={20} color="var(--cat-culture)" />, items: data?.activeDiscussions },
     ];
 
     return (
@@ -79,7 +80,10 @@ export default function ExplorePage() {
                     if (!section.items || section.items.length === 0) return null;
                     return (
                         <div key={section.title} className="section">
-                            <h2 className="section-title">{section.title}</h2>
+                            <h2 className="section-title">
+                                <span className="section-icon">{section.icon}</span>
+                                {section.title}
+                            </h2>
                             <div className="section-grid">
                                 {section.items.map((place) => (
                                     <PlaceCard
@@ -103,7 +107,7 @@ export default function ExplorePage() {
 
                 {!data?.trending?.length && !data?.recent?.length && (
                     <div className="empty-state">
-                        <div className="empty-state-icon">🗺️</div>
+                        <div className="empty-state-icon"><IconCompass size={48} color="var(--text-muted)" /></div>
                         <p className="empty-state-title">No places yet</p>
                         <p>Be the first to add a special place in {cityName}!</p>
                     </div>

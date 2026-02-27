@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { IconMapPin } from "@/components/Icons";
 
 interface LocationSearchProps {
     onSelect: (lat: number, lng: number, label: string) => void;
@@ -63,7 +64,7 @@ export default function LocationSearch({ onSelect }: LocationSearchProps) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 onSelect(lat, lng, "My Location");
-                setQuery("📍 My Location");
+                setQuery("My Location");
                 setLocating(false);
             },
             (err) => {
@@ -99,7 +100,7 @@ export default function LocationSearch({ onSelect }: LocationSearchProps) {
                     disabled={locating}
                     title="Use my current location"
                 >
-                    {locating ? "Locating..." : "📍 My Location"}
+                    {locating ? "Locating..." : <><IconMapPin size={14} /> My Location</>}
                 </button>
             </div>
 

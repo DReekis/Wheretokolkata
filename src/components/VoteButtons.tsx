@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconUp, IconDown } from "@/components/Icons";
 
 interface VoteButtonsProps {
     placeId: string;
@@ -26,7 +27,6 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
         if (!user || isSelf || loading) return;
         setLoading(true);
 
-        // Optimistic update
         const prevUp = upvotes;
         const prevDown = downvotes;
         const prevVote = currentVote;
@@ -57,7 +57,6 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
                 setDownvotes(data.downvotes);
                 setScore(data.score);
             } else {
-                // Rollback
                 setUpvotes(prevUp);
                 setDownvotes(prevDown);
                 setCurrentVote(prevVote);
@@ -81,7 +80,7 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
                 title={isSelf ? "Cannot vote on your own place" : "Upvote"}
                 aria-label="Upvote"
             >
-                ▲
+                <IconUp size={16} />
             </button>
             <span className="vote-score">{scorePercent}%</span>
             <button
@@ -91,7 +90,7 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
                 title={isSelf ? "Cannot vote on your own place" : "Downvote"}
                 aria-label="Downvote"
             >
-                ▼
+                <IconDown size={16} />
             </button>
             <span style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)" }}>
                 {upvotes} up · {downvotes} down

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconStar, IconStarOutline } from "@/components/Icons";
 
 interface SaveButtonProps {
     placeId: string;
@@ -43,8 +44,10 @@ export default function SaveButton({ placeId, initialSaved }: SaveButtonProps) {
             className={`btn ${saved ? "btn-primary" : "btn-secondary"} btn-sm`}
             onClick={handleToggle}
             disabled={loading}
+            style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
         >
-            {saved ? "★ Saved" : "☆ Save"}
+            {saved ? <IconStar size={14} /> : <IconStarOutline size={14} />}
+            {saved ? "Saved" : "Save"}
         </button>
     );
 }
