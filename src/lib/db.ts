@@ -27,9 +27,22 @@ export async function connectDB(): Promise<typeof mongoose> {
     if (!cached.promise) {
         cached.promise = mongoose.connect(MONGODB_URI, {
             bufferCommands: false,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 10000,
         });
     }
 
-    cached.conn = await cached.promise;
+    try {
+        cached.conn = await cached.promise;
+    } catch (e) {
+        cached.promise = null;
+        throw e;
+    }
+
     return cached.conn;
+}
+
+// Pre-warm connection on module load (non-blocking)
+if (process.env.MONGODB_URI) {
+    connectDB().catch(() => { });
 }
