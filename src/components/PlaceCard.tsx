@@ -9,6 +9,8 @@ interface PlaceCardProps {
     tags?: string[];
     city?: string;
     visit_confirmations?: number;
+    upvotes?: number;
+    downvotes?: number;
 }
 
 const categoryClass: Record<string, string> = {
@@ -22,8 +24,9 @@ const categoryClass: Record<string, string> = {
     "Night Spots": "badge-night",
 };
 
-export default function PlaceCard({ _id, name, category, score, image_urls, tags, city = "kolkata", visit_confirmations }: PlaceCardProps) {
+export default function PlaceCard({ _id, name, category, score, image_urls, tags, city = "kolkata", visit_confirmations, upvotes, downvotes }: PlaceCardProps) {
     const scorePercent = Math.round(score * 100);
+    const totalVotes = (upvotes || 0) + (downvotes || 0);
 
     return (
         <Link href={`/${city}/place/${_id}`} className="card place-card">
@@ -41,6 +44,11 @@ export default function PlaceCard({ _id, name, category, score, image_urls, tags
                     {scorePercent > 0 && <span className="badge badge-score">{scorePercent}%</span>}
                 </div>
                 <h3 className="place-card-name">{name}</h3>
+                {totalVotes > 0 && (
+                    <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)", margin: "2px 0" }}>
+                        ▲ {upvotes || 0} · ▼ {downvotes || 0}
+                    </p>
+                )}
                 {visit_confirmations && visit_confirmations > 0 ? (
                     <p className="place-card-desc" style={{ color: "var(--success)", fontSize: "var(--font-size-xs)" }}>
                         ✔ Verified by {visit_confirmations} visitor{visit_confirmations !== 1 ? "s" : ""}

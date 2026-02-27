@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
+import LocationSearch from "@/components/LocationSearch";
 import { CATEGORIES } from "@/lib/constants";
 import { CITY_CONFIG, type SupportedCity } from "@/lib/cities";
 
@@ -15,6 +16,7 @@ export default function AddPlacePage() {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const city = (params.city as string) || "kolkata";
+    const config = CITY_CONFIG[city as SupportedCity] || CITY_CONFIG.kolkata;
 
     const [name, setName] = useState("");
     const [category, setCategory] = useState("");
@@ -23,6 +25,8 @@ export default function AddPlacePage() {
     const [bestTime, setBestTime] = useState("");
     const [images, setImages] = useState<string[]>([]);
     const [coords, setCoords] = useState<[number, number] | null>(null);
+    const [mapCenter, setMapCenter] = useState<[number, number]>(config.center);
+    const [mapZoom, setMapZoom] = useState(config.zoom);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
 
@@ -32,10 +36,14 @@ export default function AddPlacePage() {
         }
     }, [user, authLoading, router]);
 
-    const config = CITY_CONFIG[city as SupportedCity] || CITY_CONFIG.kolkata;
-
     const handleMapClick = (lat: number, lng: number) => {
         setCoords([lat, lng]);
+    };
+
+    const handleLocationSearch = (lat: number, lng: number) => {
+        setCoords([lat, lng]);
+        setMapCenter([lat, lng]);
+        setMapZoom(16);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -170,11 +178,12 @@ export default function AddPlacePage() {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Location * (click the map)</label>
-                        <div style={{ height: "300px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border)" }}>
+                        <label className="form-label">Location * (search or use GPS)</label>
+                        <LocationSearch onSelect={handleLocationSearch} />
+                        <div style={{ height: "300px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border)", marginTop: "var(--space-2)" }}>
                             <MapComponent
-                                center={config.center}
-                                zoom={config.zoom}
+                                center={mapCenter}
+                                zoom={mapZoom}
                                 city={city}
                                 clickToAdd
                                 onMapClick={handleMapClick}
@@ -186,6 +195,7 @@ export default function AddPlacePage() {
                                 📍 {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
                             </span>
                         )}
+                        <span className="form-hint">Search above, use GPS, or click the map to fine-tune</span>
                     </div>
 
                     {error && (

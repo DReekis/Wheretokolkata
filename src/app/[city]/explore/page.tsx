@@ -13,6 +13,8 @@ interface Place {
     tags: string[];
     city: string;
     visit_confirmations?: number;
+    upvotes?: number;
+    downvotes?: number;
     commentCount?: number;
 }
 
@@ -90,6 +92,8 @@ export default function ExplorePage() {
                                         tags={place.tags}
                                         city={city}
                                         visit_confirmations={place.visit_confirmations}
+                                        upvotes={place.upvotes}
+                                        downvotes={place.downvotes}
                                     />
                                 ))}
                             </div>

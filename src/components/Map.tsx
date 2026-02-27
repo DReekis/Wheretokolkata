@@ -169,6 +169,13 @@ export default function MapComponent({
         }
     }, [category, fetchMarkers]);
 
+    // Re-center map when center/zoom props change (from location search)
+    useEffect(() => {
+        if (mapRef.current) {
+            mapRef.current.setView(center, zoom);
+        }
+    }, [center, zoom]);
+
     // Show selected position marker
     useEffect(() => {
         if (selectedMarkerRef.current) {
