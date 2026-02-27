@@ -79,9 +79,10 @@ class UpstashRateLimiter implements RateLimiter {
 }
 
 /* ========================
-   Factory
+   Factory (fail-open design)
    ======================== */
 let limiter: RateLimiter | null = null;
+const memoryFallback = new MemoryRateLimiter();
 
 function getLimiter(): RateLimiter {
     if (limiter) return limiter;
@@ -92,7 +93,7 @@ function getLimiter(): RateLimiter {
     if (url && token) {
         limiter = new UpstashRateLimiter(url, token);
     } else {
-        limiter = new MemoryRateLimiter();
+        limiter = memoryFallback;
     }
 
     return limiter;
@@ -103,5 +104,13 @@ export async function rateLimit(
     limit: number = 10,
     windowMs: number = 60_000
 ): Promise<RateLimitResult> {
-    return getLimiter().check(identifier, limit, windowMs);
+    try {
+        return await getLimiter().check(identifier, limit, windowMs);
+    } catch (err) {
+        // If Redis fails (bad credentials, network error, etc.),
+        // fall back to memory-based rate limiting instead of crashing the route
+        console.error("[RATE_LIMIT_FALLBACK] Redis failed, using memory:", err);
+        limiter = memoryFallback;
+        return { success: true, remaining: limit - 1, reset: Date.now() + windowMs };
+    }
 }
