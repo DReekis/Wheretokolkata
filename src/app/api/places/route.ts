@@ -6,6 +6,7 @@ import { validateCoordinates, parseBoundingBox, buildGeoWithinQuery } from "@/li
 import { calculateScore } from "@/lib/ranking";
 import { rateLimit } from "@/lib/rateLimit";
 import Place, { CATEGORIES } from "@/models/Place";
+import "@/models/User"; // Required for populate("created_by")
 
 const MAP_MARKER_LIMIT = 200;
 const PAGE_SIZE = 20;

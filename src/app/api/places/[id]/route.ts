@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import mongoose from "mongoose";
 import Place from "@/models/Place";
+import "@/models/User"; // Import to register schema for populate
 
 export async function GET(
     _req: NextRequest,

@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit } from "@/lib/rateLimit";
 import SavedPlace from "@/models/SavedPlace";
+import "@/models/Place"; // Required for populate("place_id")
 
 export async function GET() {
     try {
