@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
         await session.save();
 
         return NextResponse.json({ user: { id: user._id, username: user.username } }, { status: 201 });
-    } catch {
+    } catch (err) {
+        console.error("[REGISTER ERROR]", err);
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
     }
 }

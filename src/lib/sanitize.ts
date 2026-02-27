@@ -1,9 +1,18 @@
-import DOMPurify from "isomorphic-dompurify";
-
+/**
+ * Simple input sanitization — strips HTML tags and trims whitespace.
+ * No external dependency required.
+ */
 export function sanitize(input: string): string {
-    return DOMPurify.sanitize(input, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+    return input
+        .replace(/<[^>]*>/g, "")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#x27;/g, "'")
+        .trim();
 }
 
 export function sanitizeMultiline(input: string): string {
-    return DOMPurify.sanitize(input, { ALLOWED_TAGS: ["br"], ALLOWED_ATTR: [] }).trim();
+    return sanitize(input);
 }
