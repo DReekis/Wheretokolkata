@@ -5,6 +5,7 @@ import { calculateScore } from "@/lib/ranking";
 import { rateLimit } from "@/lib/rateLimit";
 import Place from "@/models/Place";
 import Vote from "@/models/Vote";
+import mongoose from "mongoose";
 
 export async function POST(req: NextRequest) {
     try {
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { place_id, vote } = body;
 
-        if (!place_id || ![1, -1].includes(vote)) {
+        if (!place_id || !mongoose.Types.ObjectId.isValid(place_id) || ![1, -1].includes(vote)) {
             return NextResponse.json({ error: "Invalid vote." }, { status: 400 });
         }
 
@@ -47,44 +48,25 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Already voted." }, { status: 409 });
         }
 
-        let upDelta = 0;
-        let downDelta = 0;
-
         if (existing) {
             await Vote.updateOne({ user_id: user.userId, place_id }, { $set: { vote } });
-            if (existing.vote === 1 && vote === -1) {
-                upDelta = -1;
-                downDelta = 1;
-            } else if (existing.vote === -1 && vote === 1) {
-                upDelta = 1;
-                downDelta = -1;
-            }
         } else {
             await Vote.create({ user_id: user.userId, place_id, vote });
-            if (vote === 1) upDelta = 1;
-            if (vote === -1) downDelta = 1;
         }
 
-        const updated = await Place.findByIdAndUpdate(
-            place_id,
-            { $inc: { upvotes: upDelta, downvotes: downDelta } },
-            { new: true }
-        )
-            .select("upvotes downvotes")
-            .lean<{ upvotes: number; downvotes: number } | null>();
+        const [upvotes, downvotes] = await Promise.all([
+            Vote.countDocuments({ place_id, vote: 1 }),
+            Vote.countDocuments({ place_id, vote: -1 }),
+        ]);
 
-        if (!updated) {
-            return NextResponse.json({ error: "Place not found." }, { status: 404 });
-        }
-
-        const score = calculateScore(updated.upvotes, updated.downvotes);
-        await Place.updateOne({ _id: place_id }, { $set: { score } });
+        const score = calculateScore(upvotes, downvotes);
+        await Place.updateOne({ _id: place_id }, { $set: { upvotes, downvotes, score } });
 
         return NextResponse.json({
             ok: true,
             score,
-            upvotes: updated.upvotes,
-            downvotes: updated.downvotes,
+            upvotes,
+            downvotes,
         });
     } catch {
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });

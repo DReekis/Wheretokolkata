@@ -74,6 +74,7 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
     return (
         <div className="vote-container">
             <button
+                type="button"
                 className={`vote-btn ${currentVote === 1 ? "active-up" : ""}`}
                 onClick={() => handleVote(1)}
                 disabled={!user || isSelf || loading}
@@ -84,6 +85,7 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
             </button>
             <span className="vote-score">{scorePercent}%</span>
             <button
+                type="button"
                 className={`vote-btn ${currentVote === -1 ? "active-down" : ""}`}
                 onClick={() => handleVote(-1)}
                 disabled={!user || isSelf || loading}
@@ -93,7 +95,7 @@ export default function VoteButtons({ placeId, initialUpvotes, initialDownvotes,
                 <IconDown size={16} />
             </button>
             <span style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)" }}>
-                {upvotes} up · {downvotes} down
+                {upvotes} up - {downvotes} down
             </span>
         </div>
     );

@@ -199,21 +199,22 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
 
     return (
         <div className="page" style={{ paddingBottom: "calc(var(--mobile-nav-height) + var(--space-12))" }}>
-            {heroImage && (
-                <Image
-                    src={heroImage}
-                    alt={place.name}
-                    className="place-hero"
-                    width={1200}
-                    height={675}
-                    sizes="100vw"
-                    priority
-                    placeholder="blur"
-                    blurDataURL={IMAGE_BLUR_PLACEHOLDER}
-                />
-            )}
-
             <div className="content-container">
+                {heroImage && (
+                    <div className="place-hero-box">
+                        <Image
+                            src={heroImage}
+                            alt={place.name}
+                            className="place-hero-image"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 720px"
+                            priority
+                            placeholder="blur"
+                            blurDataURL={IMAGE_BLUR_PLACEHOLDER}
+                        />
+                    </div>
+                )}
+
                 <div className="place-info">
                     <div style={{ marginBottom: "var(--space-3)" }}>
                         <span className={`badge ${categoryClass[place.category] || ""}`}>{place.category}</span>
@@ -255,7 +256,7 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
                     {galleryImages.length > 0 && (
                         <div className="place-gallery">
                             {galleryImages.map((url, index) => (
-                                <div key={url} className="place-gallery-item">
+                                <div key={`${url}-${index}`} className="place-gallery-item">
                                     <Image
                                         src={url}
                                         alt={`${place.name} ${index + 2}`}
@@ -311,7 +312,7 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
                     </div>
 
                     <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)", marginBottom: "var(--space-6)" }}>
-                        Added by <strong>{place.created_by.username}</strong> · {new Date(place.created_at).toLocaleDateString()}
+                        Added by <strong>{place.created_by.username}</strong> - {new Date(place.created_at).toLocaleDateString()}
                     </p>
 
                     <CommentSection placeId={place._id} initialComments={initialComments} initialSort="helpful" />
