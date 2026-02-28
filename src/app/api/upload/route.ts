@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         const paramsToSign = {
             timestamp,
             folder,
-            transformation: "f_auto,q_auto,w_600",
+            transformation: "f_auto,q_auto",
         };
 
         const signature = cloudinary.utils.api_sign_request(

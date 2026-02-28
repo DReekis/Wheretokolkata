@@ -11,6 +11,66 @@ interface ImageUploadProps {
 
 const MAX_IMAGES = 5;
 const MAX_SIZE_MB = 5;
+const MAX_DIMENSION = 1600;
+const TARGET_UPLOAD_SIZE_BYTES = 900 * 1024;
+const MIN_QUALITY = 0.5;
+const INITIAL_QUALITY = 0.78;
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error("Failed to compress image."));
+                return;
+            }
+            resolve(blob);
+        }, type, quality);
+    });
+}
+
+async function compressImage(file: File): Promise<File> {
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new window.Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Unable to read image."));
+            img.src = objectUrl;
+        });
+
+        const largestSide = Math.max(image.naturalWidth, image.naturalHeight);
+        const scale = largestSide > MAX_DIMENSION ? MAX_DIMENSION / largestSide : 1;
+        const width = Math.max(1, Math.round(image.naturalWidth * scale));
+        const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return file;
+
+        ctx.drawImage(image, 0, 0, width, height);
+
+        let quality = INITIAL_QUALITY;
+        let blob = await canvasToBlob(canvas, "image/jpeg", quality);
+
+        while (blob.size > TARGET_UPLOAD_SIZE_BYTES && quality > MIN_QUALITY) {
+            quality = Math.max(MIN_QUALITY, quality - 0.08);
+            blob = await canvasToBlob(canvas, "image/jpeg", quality);
+        }
+
+        if (blob.size >= file.size && scale === 1) {
+            return file;
+        }
+
+        const compressedName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+        return new File([blob], compressedName, { type: "image/jpeg" });
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
+}
 
 export default function ImageUpload({ images, onChange }: ImageUploadProps) {
     const [uploading, setUploading] = useState(false);
@@ -52,13 +112,14 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
             const uploadedUrls: string[] = [];
 
             for (const file of toUpload) {
+                const compressedFile = await compressImage(file);
                 const formData = new FormData();
-                formData.append("file", file);
+                formData.append("file", compressedFile);
                 formData.append("api_key", signData.apiKey);
                 formData.append("timestamp", String(signData.timestamp));
                 formData.append("signature", signData.signature);
                 formData.append("folder", signData.folder);
-                formData.append("transformation", "f_auto,q_auto,w_600");
+                formData.append("transformation", "f_auto,q_auto");
 
                 const uploadRes = await fetch(
                     `https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`,
@@ -100,7 +161,7 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
                         <p style={{ fontSize: "var(--font-size-sm)", color: "var(--text-secondary)" }}>
                             Click to upload images ({images.length}/{MAX_IMAGES})
                         </p>
-                        <p className="form-hint">Max {MAX_SIZE_MB}MB each - JPG, PNG, WebP</p>
+                        <p className="form-hint">Max {MAX_SIZE_MB}MB each - auto-compressed before upload</p>
                     </>
                 )}
             </div>
