@@ -15,19 +15,21 @@ export default function Navbar() {
     return (
         <nav className="navbar">
             <div className="navbar-inner">
-                <Link href={`/${city}/explore`} className="navbar-logo">
+                <Link href={`/${city}/explore`} prefetch className="navbar-logo">
                     Where<span>To</span>{city.charAt(0).toUpperCase() + city.slice(1)}
                 </Link>
 
                 <div className="navbar-links">
                     <Link
                         href={`/${city}/explore`}
+                        prefetch
                         className={`navbar-link ${isActive("/explore") ? "active" : ""}`}
                     >
                         Explore
                     </Link>
                     <Link
                         href={`/${city}/map`}
+                        prefetch
                         className={`navbar-link ${isActive("/map") ? "active" : ""}`}
                     >
                         Map
@@ -35,6 +37,7 @@ export default function Navbar() {
                     {user && (
                         <Link
                             href={`/${city}/add`}
+                            prefetch
                             className={`navbar-link ${isActive("/add") ? "active" : ""}`}
                         >
                             + Add Place
@@ -45,7 +48,7 @@ export default function Navbar() {
                 <div className="navbar-actions">
                     {user ? (
                         <>
-                            <Link href="/profile" className="btn btn-ghost btn-sm">
+                            <Link href="/profile" prefetch className="btn btn-ghost btn-sm">
                                 {user.username}
                             </Link>
                             <button onClick={logout} className="btn btn-secondary btn-sm">
@@ -54,10 +57,10 @@ export default function Navbar() {
                         </>
                     ) : (
                         <>
-                            <Link href="/login" className="btn btn-ghost btn-sm">
+                            <Link href="/login" prefetch className="btn btn-ghost btn-sm">
                                 Login
                             </Link>
-                            <Link href="/register" className="btn btn-primary btn-sm">
+                            <Link href="/register" prefetch className="btn btn-primary btn-sm">
                                 Register
                             </Link>
                         </>

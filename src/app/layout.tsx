@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import MobileNav from "@/components/MobileNav";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -21,7 +22,9 @@ export const metadata: Metadata = {
     },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+    const initialUser = await getCurrentUser();
+
     return (
         <html lang="en">
             <head>
@@ -32,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <link rel="dns-prefetch" href="https://unpkg.com" />
             </head>
             <body>
-                <AuthProvider>
+                <AuthProvider initialUser={initialUser}>
                     <Navbar />
                     <main>{children}</main>
                     <MobileNav />

@@ -21,7 +21,12 @@ export async function GET(req: NextRequest) {
         const sortObj: Record<string, 1 | -1> = sort === "recent" ? { created_at: -1 } : { upvotes: -1, created_at: -1 };
 
         const [comments, total] = await Promise.all([
-            Comment.find({ place_id }).sort(sortObj).skip((page - 1) * limit).limit(limit).lean(),
+            Comment.find({ place_id })
+                .sort(sortObj)
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .select("username text upvotes created_at")
+                .lean(),
             Comment.countDocuments({ place_id }),
         ]);
 

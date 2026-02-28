@@ -35,17 +35,16 @@ export async function GET(req: NextRequest) {
             Object.assign(query, buildGeoWithinQuery(bbox));
 
             const places = await Place.find(query)
-                .select("name category score location image_urls")
+                .select("name category score location")
                 .limit(MAP_MARKER_LIMIT)
                 .lean();
 
             const markers = places.map((p) => ({
-                _id: p._id,
+                _id: String(p._id),
                 name: p.name,
                 category: p.category,
                 score: p.score,
                 coordinates: p.location.coordinates,
-                thumbnail: p.image_urls?.[0] || null,
             }));
 
             const res = NextResponse.json({ markers, total: markers.length });
@@ -60,6 +59,7 @@ export async function GET(req: NextRequest) {
                 .sort({ created_at: -1 })
                 .skip(skip)
                 .limit(PAGE_SIZE)
+                .select("name city category score image_urls tags visit_confirmations upvotes downvotes created_by created_at")
                 .populate("created_by", "username")
                 .lean(),
             Place.countDocuments(query),

@@ -5,6 +5,36 @@ import Comment from "@/models/Comment";
 
 const FEED_LIMIT = 8;
 
+interface FeedPlace {
+    _id: unknown;
+    name: string;
+    category: string;
+    score: number;
+    image_urls?: string[];
+    tags?: string[];
+    city: string;
+    visit_confirmations?: number;
+    upvotes?: number;
+    downvotes?: number;
+    commentCount?: number;
+}
+
+function toFeedItem(place: FeedPlace) {
+    return {
+        _id: String(place._id),
+        name: place.name,
+        category: place.category,
+        score: place.score,
+        image_url: place.image_urls?.[0] || null,
+        tags: (place.tags || []).slice(0, 3),
+        city: place.city,
+        visit_confirmations: place.visit_confirmations || 0,
+        upvotes: place.upvotes || 0,
+        downvotes: place.downvotes || 0,
+        commentCount: place.commentCount || 0,
+    };
+}
+
 export async function GET(req: NextRequest) {
     try {
         await connectDB();
@@ -13,20 +43,20 @@ export async function GET(req: NextRequest) {
 
         const baseFilter = { city, status: "approved" };
 
-        const [trending, recent, hiddenGems, activeDiscussions] = await Promise.all([
+        const [trendingRaw, recentRaw, hiddenGemsRaw, activeDiscussionsRaw] = await Promise.all([
             // Trending: highest score
             Place.find(baseFilter)
                 .sort({ score: -1, upvotes: -1 })
                 .limit(FEED_LIMIT)
                 .select("name category score image_urls tags city visit_confirmations upvotes downvotes")
-                .lean(),
+                .lean<FeedPlace[]>(),
 
             // Recently Added
             Place.find(baseFilter)
                 .sort({ created_at: -1 })
                 .limit(FEED_LIMIT)
                 .select("name category score image_urls tags city created_at upvotes downvotes")
-                .lean(),
+                .lean<FeedPlace[]>(),
 
             // Hidden Gems: high score, low vote count
             Place.find({
@@ -37,10 +67,10 @@ export async function GET(req: NextRequest) {
                 .sort({ score: -1 })
                 .limit(FEED_LIMIT)
                 .select("name category score image_urls tags city upvotes downvotes")
-                .lean(),
+                .lean<FeedPlace[]>(),
 
             // Active Discussions: most recent comments
-            Comment.aggregate([
+            Comment.aggregate<FeedPlace>([
                 {
                     $group: {
                         _id: "$place_id",
@@ -67,11 +97,21 @@ export async function GET(req: NextRequest) {
                         category: "$place.category",
                         score: "$place.score",
                         image_urls: "$place.image_urls",
+                        tags: "$place.tags",
+                        city: "$place.city",
+                        upvotes: "$place.upvotes",
+                        downvotes: "$place.downvotes",
+                        visit_confirmations: "$place.visit_confirmations",
                         commentCount: 1,
                     },
                 },
             ]),
         ]);
+
+        const trending = trendingRaw.map(toFeedItem);
+        const recent = recentRaw.map(toFeedItem);
+        const hiddenGems = hiddenGemsRaw.map(toFeedItem);
+        const activeDiscussions = activeDiscussionsRaw.map(toFeedItem);
 
         const res = NextResponse.json({ trending, recent, hiddenGems, activeDiscussions });
         res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");

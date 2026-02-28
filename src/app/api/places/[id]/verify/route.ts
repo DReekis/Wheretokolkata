@@ -23,13 +23,13 @@ export async function POST(
         const { id } = await params;
         await connectDB();
 
-        const place = await Place.findById(id);
+        const place = await Place.findById(id).select("_id").lean();
         if (!place) {
             return NextResponse.json({ error: "Place not found." }, { status: 404 });
         }
 
         // Check existing confirmation
-        const existing = await VisitConfirmation.findOne({ user_id: user.userId, place_id: id });
+        const existing = await VisitConfirmation.findOne({ user_id: user.userId, place_id: id }).select("_id").lean();
         if (existing) {
             return NextResponse.json({ error: "Already confirmed." }, { status: 409 });
         }

@@ -67,7 +67,7 @@ export default function LoginPage() {
                 </form>
 
                 <div className="auth-footer">
-                    Don&apos;t have an account? <Link href="/register">Register</Link>
+                    Don&apos;t have an account? <Link href="/register" prefetch>Register</Link>
                 </div>
             </div>
         </div>

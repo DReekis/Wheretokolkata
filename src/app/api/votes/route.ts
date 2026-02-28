@@ -27,48 +27,65 @@ export async function POST(req: NextRequest) {
 
         await connectDB();
 
-        const place = await Place.findById(place_id);
+        const place = await Place.findById(place_id)
+            .select("created_by")
+            .lean<{ created_by: { toString(): string } } | null>();
+
         if (!place) {
             return NextResponse.json({ error: "Place not found." }, { status: 404 });
         }
 
-        // Prevent self-voting
         if (place.created_by.toString() === user.userId) {
             return NextResponse.json({ error: "Cannot vote on your own place." }, { status: 403 });
         }
 
-        const existing = await Vote.findOne({ user_id: user.userId, place_id });
+        const existing = await Vote.findOne({ user_id: user.userId, place_id })
+            .select("vote")
+            .lean<{ vote: 1 | -1 } | null>();
+
+        if (existing?.vote === vote) {
+            return NextResponse.json({ error: "Already voted." }, { status: 409 });
+        }
+
+        let upDelta = 0;
+        let downDelta = 0;
 
         if (existing) {
-            if (existing.vote === vote) {
-                return NextResponse.json({ error: "Already voted." }, { status: 409 });
+            await Vote.updateOne({ user_id: user.userId, place_id }, { $set: { vote } });
+            if (existing.vote === 1 && vote === -1) {
+                upDelta = -1;
+                downDelta = 1;
+            } else if (existing.vote === -1 && vote === 1) {
+                upDelta = 1;
+                downDelta = -1;
             }
-            // Change vote
-            const oldVote = existing.vote;
-            existing.vote = vote;
-            await existing.save();
-
-            const upDelta = vote === 1 ? 1 : -1;
-            const downDelta = oldVote === -1 ? -1 : 1;
-
-            await Place.findByIdAndUpdate(place_id, {
-                $inc: { upvotes: upDelta, downvotes: vote === -1 ? 1 : -1 },
-            });
         } else {
             await Vote.create({ user_id: user.userId, place_id, vote });
-            await Place.findByIdAndUpdate(place_id, {
-                $inc: vote === 1 ? { upvotes: 1 } : { downvotes: 1 },
-            });
+            if (vote === 1) upDelta = 1;
+            if (vote === -1) downDelta = 1;
         }
 
-        // Recalculate score
-        const updated = await Place.findById(place_id);
-        if (updated) {
-            updated.score = calculateScore(updated.upvotes, updated.downvotes);
-            await updated.save();
+        const updated = await Place.findByIdAndUpdate(
+            place_id,
+            { $inc: { upvotes: upDelta, downvotes: downDelta } },
+            { new: true }
+        )
+            .select("upvotes downvotes")
+            .lean<{ upvotes: number; downvotes: number } | null>();
+
+        if (!updated) {
+            return NextResponse.json({ error: "Place not found." }, { status: 404 });
         }
 
-        return NextResponse.json({ ok: true, score: updated?.score, upvotes: updated?.upvotes, downvotes: updated?.downvotes });
+        const score = calculateScore(updated.upvotes, updated.downvotes);
+        await Place.updateOne({ _id: place_id }, { $set: { score } });
+
+        return NextResponse.json({
+            ok: true,
+            score,
+            upvotes: updated.upvotes,
+            downvotes: updated.downvotes,
+        });
     } catch {
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
     }

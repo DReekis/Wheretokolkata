@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
+import Image from "next/image";
+import { IMAGE_BLUR_PLACEHOLDER, optimizeCloudinaryUrl } from "@/lib/image";
 
 interface ImageUploadProps {
     images: string[];
@@ -40,7 +42,6 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
 
         setUploading(true);
         try {
-            // Get signed upload params
             const signRes = await fetch("/api/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -57,7 +58,7 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
                 formData.append("timestamp", String(signData.timestamp));
                 formData.append("signature", signData.signature);
                 formData.append("folder", signData.folder);
-                formData.append("transformation", "f_auto,q_auto");
+                formData.append("transformation", "f_auto,q_auto,w_600");
 
                 const uploadRes = await fetch(
                     `https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`,
@@ -73,8 +74,9 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
             onChange([...images, ...uploadedUrls]);
         } catch {
             setError("Upload failed. Please try again.");
+        } finally {
+            setUploading(false);
         }
-        setUploading(false);
     };
 
     const removeImage = (index: number) => {
@@ -98,7 +100,7 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
                         <p style={{ fontSize: "var(--font-size-sm)", color: "var(--text-secondary)" }}>
                             Click to upload images ({images.length}/{MAX_IMAGES})
                         </p>
-                        <p className="form-hint">Max {MAX_SIZE_MB}MB each · JPG, PNG, WebP</p>
+                        <p className="form-hint">Max {MAX_SIZE_MB}MB each - JPG, PNG, WebP</p>
                     </>
                 )}
             </div>
@@ -116,10 +118,25 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
 
             {images.length > 0 && (
                 <div className="upload-preview-grid">
-                    {images.map((url, i) => (
-                        <div key={i} className="upload-preview">
-                            <img src={url} alt={`Upload ${i + 1}`} />
-                            <button className="upload-preview-remove" onClick={() => removeImage(i)}>×</button>
+                    {images.map((url, index) => (
+                        <div key={`${url}-${index}`} className="upload-preview">
+                            <Image
+                                src={optimizeCloudinaryUrl(url, 600)}
+                                alt={`Upload ${index + 1}`}
+                                fill
+                                sizes="(max-width: 768px) 25vw, 100px"
+                                loading="lazy"
+                                placeholder="blur"
+                                blurDataURL={IMAGE_BLUR_PLACEHOLDER}
+                                style={{ objectFit: "cover" }}
+                            />
+                            <button
+                                type="button"
+                                className="upload-preview-remove"
+                                onClick={() => removeImage(index)}
+                            >
+                                x
+                            </button>
                         </div>
                     ))}
                 </div>

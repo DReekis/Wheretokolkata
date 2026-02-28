@@ -1,17 +1,21 @@
 import Link from "next/link";
+import Image from "next/image";
 import { IconCheck, IconUp, IconDown } from "@/components/Icons";
+import { IMAGE_BLUR_PLACEHOLDER, optimizeCloudinaryUrl } from "@/lib/image";
 
 interface PlaceCardProps {
     _id: string;
     name: string;
     category: string;
     score: number;
+    image_url?: string | null;
     image_urls?: string[];
     tags?: string[];
     city?: string;
     visit_confirmations?: number;
     upvotes?: number;
     downvotes?: number;
+    priority?: boolean;
 }
 
 const categoryClass: Record<string, string> = {
@@ -25,19 +29,41 @@ const categoryClass: Record<string, string> = {
     "Night Spots": "badge-night",
 };
 
-export default function PlaceCard({ _id, name, category, score, image_urls, tags, city = "kolkata", visit_confirmations, upvotes, downvotes }: PlaceCardProps) {
+export default function PlaceCard({
+    _id,
+    name,
+    category,
+    score,
+    image_url,
+    image_urls,
+    tags,
+    city = "kolkata",
+    visit_confirmations,
+    upvotes,
+    downvotes,
+    priority = false,
+}: PlaceCardProps) {
     const scorePercent = Math.round(score * 100);
     const totalVotes = (upvotes || 0) + (downvotes || 0);
+    const imageSrc = image_url || image_urls?.[0] || null;
+    const optimizedSrc = imageSrc ? optimizeCloudinaryUrl(imageSrc, 600) : null;
 
     return (
-        <Link href={`/${city}/place/${_id}`} className="card place-card">
-            {image_urls?.[0] && (
-                <img
-                    src={image_urls[0]}
-                    alt={name}
-                    className="place-card-image"
-                    loading="lazy"
-                />
+        <Link href={`/${city}/place/${_id}`} prefetch className="card place-card">
+            {optimizedSrc && (
+                <div className="place-card-image-wrap">
+                    <Image
+                        src={optimizedSrc}
+                        alt={name}
+                        className="place-card-image"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        priority={priority}
+                        loading={priority ? "eager" : "lazy"}
+                        placeholder="blur"
+                        blurDataURL={IMAGE_BLUR_PLACEHOLDER}
+                    />
+                </div>
             )}
             <div className="place-card-content">
                 <div className="place-card-meta">

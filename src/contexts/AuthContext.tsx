@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 interface User {
     userId: string;
@@ -18,25 +18,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+function normalizeUser(raw: unknown): User | null {
+    if (!raw || typeof raw !== "object") return null;
+    const obj = raw as { userId?: string; id?: string; username?: string };
+    const userId = obj.userId || obj.id;
+    if (!userId || !obj.username) return null;
+    return { userId, username: obj.username };
+}
+
+export function AuthProvider({ children, initialUser = null }: { children: ReactNode; initialUser?: User | null }) {
+    const [user, setUser] = useState<User | null>(initialUser);
+    const [loading, setLoading] = useState(false);
 
     const refresh = useCallback(async () => {
+        setLoading(true);
         try {
             const res = await fetch("/api/auth/me");
             const data = await res.json();
-            setUser(data.user || null);
+            setUser(normalizeUser(data.user));
         } catch {
             setUser(null);
         } finally {
             setLoading(false);
         }
     }, []);
-
-    useEffect(() => {
-        refresh();
-    }, [refresh]);
 
     const login = async (username: string, password: string) => {
         const res = await fetch("/api/auth/login", {
@@ -46,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         const data = await res.json();
         if (!res.ok) return { error: data.error };
-        await refresh();
+        setUser(normalizeUser(data.user));
         return {};
     };
 
@@ -58,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         const data = await res.json();
         if (!res.ok) return { error: data.error };
-        await refresh();
+        setUser(normalizeUser(data.user));
         return {};
     };
 

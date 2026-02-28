@@ -9,21 +9,28 @@ interface Comment {
     username: string;
     text: string;
     upvotes: number;
-    created_at: string;
+    created_at: string | Date;
 }
 
 interface CommentSectionProps {
     placeId: string;
+    initialComments?: Comment[];
+    initialSort?: "helpful" | "recent";
 }
 
-export default function CommentSection({ placeId }: CommentSectionProps) {
+export default function CommentSection({
+    placeId,
+    initialComments,
+    initialSort = "helpful",
+}: CommentSectionProps) {
     const { user } = useAuth();
-    const [comments, setComments] = useState<Comment[]>([]);
+    const [comments, setComments] = useState<Comment[]>(initialComments || []);
     const [text, setText] = useState("");
-    const [sort, setSort] = useState<"helpful" | "recent">("helpful");
-    const [loading, setLoading] = useState(false);
+    const [sort, setSort] = useState<"helpful" | "recent">(initialSort);
+    const [loading, setLoading] = useState(!initialComments);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [skipFirstFetch, setSkipFirstFetch] = useState(Boolean(initialComments));
 
     const fetchComments = useCallback(async () => {
         setLoading(true);
@@ -38,8 +45,12 @@ export default function CommentSection({ placeId }: CommentSectionProps) {
     }, [placeId, sort]);
 
     useEffect(() => {
+        if (skipFirstFetch) {
+            setSkipFirstFetch(false);
+            return;
+        }
         fetchComments();
-    }, [fetchComments]);
+    }, [fetchComments, skipFirstFetch]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,7 +98,7 @@ export default function CommentSection({ placeId }: CommentSectionProps) {
         }
     };
 
-    const timeAgo = (date: string) => {
+    const timeAgo = (date: string | Date) => {
         const diff = Date.now() - new Date(date).getTime();
         const mins = Math.floor(diff / 60000);
         if (mins < 60) return `${mins}m ago`;

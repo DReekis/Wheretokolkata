@@ -22,7 +22,10 @@ export async function POST(req: NextRequest) {
 
         await connectDB();
 
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username })
+            .select("_id username password_hash")
+            .lean<{ _id: { toString(): string }; username: string; password_hash: string } | null>();
+
         if (!user) {
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
@@ -37,7 +40,7 @@ export async function POST(req: NextRequest) {
         session.username = user.username;
         await session.save();
 
-        return NextResponse.json({ user: { id: user._id, username: user.username } });
+        return NextResponse.json({ user: { userId: user._id.toString(), username: user.username } });
     } catch {
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
     }

@@ -98,7 +98,7 @@ export default function RegisterPage() {
                 </form>
 
                 <div className="auth-footer">
-                    Already have an account? <Link href="/login">Login</Link>
+                    Already have an account? <Link href="/login" prefetch>Login</Link>
                 </div>
             </div>
         </div>

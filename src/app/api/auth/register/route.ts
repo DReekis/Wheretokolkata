@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
         await connectDB();
 
-        const existing = await User.findOne({ username });
+        const existing = await User.findOne({ username }).select("_id").lean();
         if (existing) {
             return NextResponse.json({ error: "Username already taken." }, { status: 409 });
         }
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         session.username = user.username;
         await session.save();
 
-        return NextResponse.json({ user: { id: user._id, username: user.username } }, { status: 201 });
+        return NextResponse.json({ user: { userId: user._id.toString(), username: user.username } }, { status: 201 });
     } catch (err) {
         console.error("[REGISTER ERROR]", err);
         return NextResponse.json({ error: "Something went wrong." }, { status: 500 });

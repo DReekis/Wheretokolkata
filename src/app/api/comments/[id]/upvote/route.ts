@@ -22,7 +22,9 @@ export async function POST(
         const { id } = await params;
         await connectDB();
 
-        const comment = await Comment.findByIdAndUpdate(id, { $inc: { upvotes: 1 } }, { new: true });
+        const comment = await Comment.findByIdAndUpdate(id, { $inc: { upvotes: 1 } }, { new: true })
+            .select("upvotes")
+            .lean();
         if (!comment) {
             return NextResponse.json({ error: "Comment not found." }, { status: 404 });
         }

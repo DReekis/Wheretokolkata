@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
         await connectDB();
 
-        const existing = await SavedPlace.findOne({ user_id: user.userId, place_id });
+        const existing = await SavedPlace.findOne({ user_id: user.userId, place_id }).select("_id").lean();
         if (existing) {
             await SavedPlace.deleteOne({ _id: existing._id });
             return NextResponse.json({ saved: false });
