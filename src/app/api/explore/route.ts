@@ -71,6 +71,7 @@ export async function GET(req: NextRequest) {
 
             // Active Discussions: most recent comments
             Comment.aggregate<FeedPlace>([
+                { $match: { $or: [{ status: "active" }, { status: { $exists: false } }] } },
                 {
                     $group: {
                         _id: "$place_id",

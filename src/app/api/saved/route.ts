@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { rateLimit } from "@/lib/rateLimit";
 import SavedPlace from "@/models/SavedPlace";
 import "@/models/Place"; // Required for populate("place_id")
+import Place from "@/models/Place";
 
 export async function GET() {
     try {
@@ -45,6 +46,11 @@ export async function POST(req: NextRequest) {
         }
 
         await connectDB();
+
+        const place = await Place.findById(place_id).select("status").lean<{ status: string } | null>();
+        if (!place || place.status !== "approved") {
+            return NextResponse.json({ error: "Place not found." }, { status: 404 });
+        }
 
         const existing = await SavedPlace.findOne({ user_id: user.userId, place_id }).select("_id").lean();
         if (existing) {

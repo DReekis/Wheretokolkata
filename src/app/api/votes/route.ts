@@ -29,11 +29,15 @@ export async function POST(req: NextRequest) {
         await connectDB();
 
         const place = await Place.findById(place_id)
-            .select("created_by")
-            .lean<{ created_by: { toString(): string } } | null>();
+            .select("created_by status")
+            .lean<{ created_by: { toString(): string }; status: string } | null>();
 
         if (!place) {
             return NextResponse.json({ error: "Place not found." }, { status: 404 });
+        }
+
+        if (place.status !== "approved") {
+            return NextResponse.json({ error: "Place not available." }, { status: 404 });
         }
 
         if (place.created_by.toString() === user.userId) {

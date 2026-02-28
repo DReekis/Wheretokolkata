@@ -23,8 +23,8 @@ export async function POST(
         const { id } = await params;
         await connectDB();
 
-        const place = await Place.findById(id).select("_id").lean();
-        if (!place) {
+        const place = await Place.findById(id).select("status").lean<{ status: string } | null>();
+        if (!place || place.status !== "approved") {
             return NextResponse.json({ error: "Place not found." }, { status: 404 });
         }
 

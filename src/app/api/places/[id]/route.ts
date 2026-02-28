@@ -19,7 +19,7 @@ export async function GET(
         await connectDB();
 
         const place = await Place.findById(id).populate("created_by", "username").lean();
-        if (!place || place.status === "removed") {
+        if (!place || place.status !== "approved") {
             return NextResponse.json({ error: "Place not found." }, { status: 404 });
         }
 

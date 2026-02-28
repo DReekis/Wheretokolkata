@@ -24,8 +24,8 @@ export default async function ProfilePage() {
     await connectDB();
 
     const user = await User.findById(currentUser.userId)
-        .select("username karma created_at")
-        .lean<{ _id: unknown; username: string; karma: number; created_at: string | Date } | null>();
+        .select("username karma role created_at")
+        .lean<{ _id: unknown; username: string; karma: number; role?: string; created_at: string | Date } | null>();
 
     if (!user) {
         redirect("/login");
@@ -33,7 +33,7 @@ export default async function ProfilePage() {
 
     const [placesCount, commentsCount, places, savedPlaces] = await Promise.all([
         Place.countDocuments({ created_by: user._id, status: { $ne: "removed" } }),
-        Comment.countDocuments({ user_id: user._id }),
+        Comment.countDocuments({ user_id: user._id, status: { $ne: "removed" } }),
         Place.find({ created_by: user._id, status: { $ne: "removed" } })
             .sort({ created_at: -1 })
             .limit(20)
@@ -94,6 +94,12 @@ export default async function ProfilePage() {
                             Logout
                         </button>
                     </form>
+
+                    {(user.role === "moderator" || user.role === "admin") && (
+                        <div style={{ marginTop: "var(--space-2)" }}>
+                            <a href="/moderation" className="btn btn-ghost btn-sm">Moderation Queue</a>
+                        </div>
+                    )}
                 </div>
 
                 {places.length > 0 && (

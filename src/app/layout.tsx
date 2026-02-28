@@ -3,6 +3,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import MobileNav from "@/components/MobileNav";
 import { getCurrentUser } from "@/lib/auth";
+import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -12,13 +13,25 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-    title: "WhereToKolkata — Discover Special Places",
+    metadataBase: new URL(getSiteUrl()),
+    title: "WhereToKolkata - Discover Special Places",
     description: "A community-driven map to discover, validate, and discuss meaningful places in Kolkata.",
     keywords: ["Kolkata", "places", "community map", "discover", "explore", "food", "cafes", "hidden gems"],
+    alternates: {
+        canonical: "/kolkata/explore",
+    },
     openGraph: {
         title: "WhereToKolkata",
         description: "Discover special places in Kolkata, validated by the community.",
         type: "website",
+        url: "/kolkata/explore",
+        images: [{ url: "/opengraph-image" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "WhereToKolkata",
+        description: "Discover special places in Kolkata, validated by the community.",
+        images: ["/opengraph-image"],
     },
 };
 

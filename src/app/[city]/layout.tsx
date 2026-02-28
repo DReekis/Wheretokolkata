@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { isValidCity, CITY_CONFIG, type SupportedCity } from "@/lib/cities";
 import type { Metadata } from "next";
+import { isValidCity, CITY_CONFIG, type SupportedCity } from "@/lib/cities";
+import { absoluteUrl } from "@/lib/site";
 
 interface CityLayoutProps {
     children: React.ReactNode;
@@ -12,9 +13,20 @@ export async function generateMetadata({ params }: CityLayoutProps): Promise<Met
     if (!isValidCity(city)) return {};
 
     const config = CITY_CONFIG[city as SupportedCity];
+    const canonicalUrl = absoluteUrl(`/${city}/explore`);
+
     return {
-        title: `WhereTo${config.name} — Discover Special Places`,
+        title: `WhereTo${config.name} - Discover Special Places`,
         description: `Community-driven map to discover meaningful places in ${config.name}.`,
+        alternates: {
+            canonical: canonicalUrl,
+        },
+        openGraph: {
+            title: `WhereTo${config.name}`,
+            description: `Community-driven map to discover meaningful places in ${config.name}.`,
+            url: canonicalUrl,
+            images: [{ url: "/opengraph-image" }],
+        },
     };
 }
 

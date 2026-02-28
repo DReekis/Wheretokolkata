@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { IconUp, IconChat } from "@/components/Icons";
+import { IconUp } from "@/components/Icons";
+import ReportButton from "@/components/ReportButton";
 
 interface Comment {
     _id: string;
@@ -166,9 +167,10 @@ export default function CommentSection({
                             </div>
                             <p className="comment-text">{comment.text}</p>
                             <div className="comment-actions">
-                                <button className="comment-action-btn" onClick={() => handleUpvote(comment._id)}>
+                                <button type="button" className="comment-action-btn" onClick={() => handleUpvote(comment._id)}>
                                     <IconUp size={12} /> {comment.upvotes > 0 ? comment.upvotes : ""}
                                 </button>
+                                <ReportButton targetType="comment" targetId={comment._id} compact />
                             </div>
                         </div>
                     ))}

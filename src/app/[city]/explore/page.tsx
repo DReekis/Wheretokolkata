@@ -1,13 +1,33 @@
 import { Suspense, type ReactNode } from "react";
+import type { Metadata } from "next";
 import PlaceCard from "@/components/PlaceCard";
 import TrendingSidebar from "@/components/TrendingSidebar";
 import { IconTrending, IconRecent, IconGem, IconChat, IconCompass } from "@/components/Icons";
 import { connectDB } from "@/lib/db";
 import Place from "@/models/Place";
 import Comment from "@/models/Comment";
+import { absoluteUrl } from "@/lib/site";
 
 interface ExplorePageProps {
     params: Promise<{ city: string }>;
+}
+
+export async function generateMetadata({ params }: ExplorePageProps): Promise<Metadata> {
+    const { city } = await params;
+    const cityName = city.charAt(0).toUpperCase() + city.slice(1);
+    const canonical = absoluteUrl(`/${city}/explore`);
+
+    return {
+        title: `Explore ${cityName} - WhereToKolkata`,
+        description: `Discover trending places, hidden gems, and fresh spots in ${cityName}.`,
+        alternates: { canonical },
+        openGraph: {
+            title: `Explore ${cityName}`,
+            description: `Discover trending places, hidden gems, and fresh spots in ${cityName}.`,
+            url: canonical,
+            images: [{ url: "/opengraph-image" }],
+        },
+    };
 }
 
 interface ExplorePlace {
@@ -140,6 +160,7 @@ async function getActiveDiscussions(city: string): Promise<ExplorePlace[]> {
         visit_confirmations: number;
         commentCount: number;
     }>([
+        { $match: { $or: [{ status: "active" }, { status: { $exists: false } }] } },
         {
             $group: {
                 _id: "$place_id",

@@ -21,6 +21,7 @@ export interface IPlace extends Document {
     status: PlaceStatus;
     last_verified_at: Date | null;
     visit_confirmations: number;
+    report_count: number;
     created_by: Types.ObjectId;
     created_at: Date;
 }
@@ -50,6 +51,7 @@ const PlaceSchema = new Schema<IPlace>({
     status: { type: String, enum: ["pending", "approved", "flagged", "removed"], default: "approved" },
     last_verified_at: { type: Date, default: null },
     visit_confirmations: { type: Number, default: 0 },
+    report_count: { type: Number, default: 0 },
     created_by: { type: Schema.Types.ObjectId, ref: "User", required: true },
     created_at: { type: Date, default: Date.now },
 });
@@ -59,5 +61,6 @@ PlaceSchema.index({ city: 1, category: 1, status: 1 });
 PlaceSchema.index({ city: 1, status: 1, score: -1 });
 PlaceSchema.index({ city: 1, status: 1, created_at: -1 });
 PlaceSchema.index({ city: 1, status: 1, visit_confirmations: -1 });
+PlaceSchema.index({ status: 1, report_count: -1, created_at: -1 });
 
 export default mongoose.models.Place || mongoose.model<IPlace>("Place", PlaceSchema);

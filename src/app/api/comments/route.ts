@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 import { rateLimit } from "@/lib/rateLimit";
 import Comment from "@/models/Comment";
+import Place from "@/models/Place";
 
 export async function GET(req: NextRequest) {
     try {
@@ -19,15 +20,19 @@ export async function GET(req: NextRequest) {
         }
 
         const sortObj: Record<string, 1 | -1> = sort === "recent" ? { created_at: -1 } : { upvotes: -1, created_at: -1 };
+        const visibleFilter = {
+            place_id,
+            $or: [{ status: "active" }, { status: { $exists: false } }],
+        };
 
         const [comments, total] = await Promise.all([
-            Comment.find({ place_id })
+            Comment.find(visibleFilter)
                 .sort(sortObj)
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .select("username text upvotes created_at")
                 .lean(),
-            Comment.countDocuments({ place_id }),
+            Comment.countDocuments(visibleFilter),
         ]);
 
         return NextResponse.json({ comments, total, page, pages: Math.ceil(total / limit) });
@@ -65,6 +70,11 @@ export async function POST(req: NextRequest) {
         }
 
         await connectDB();
+
+        const place = await Place.findById(place_id).select("status").lean<{ status: string } | null>();
+        if (!place || place.status !== "approved") {
+            return NextResponse.json({ error: "Place not available for comments." }, { status: 404 });
+        }
 
         const comment = await Comment.create({
             place_id,

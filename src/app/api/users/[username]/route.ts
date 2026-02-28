@@ -20,7 +20,7 @@ export async function GET(
 
         const [placesCount, commentsCount, places, savedPlaces] = await Promise.all([
             Place.countDocuments({ created_by: user._id, status: { $ne: "removed" } }),
-            Comment.countDocuments({ user_id: user._id }),
+            Comment.countDocuments({ user_id: user._id, status: { $ne: "removed" } }),
             Place.find({ created_by: user._id, status: { $ne: "removed" } })
                 .sort({ created_at: -1 })
                 .limit(20)

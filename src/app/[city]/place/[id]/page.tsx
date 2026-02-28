@@ -1,9 +1,11 @@
 import Image from "next/image";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import mongoose from "mongoose";
 import VoteButtons from "@/components/VoteButtons";
 import CommentSection from "@/components/CommentSection";
+import ReportButton from "@/components/ReportButton";
 import { IconCheck, IconClock, IconCompass, IconStar, IconStarOutline } from "@/components/Icons";
 import { getScoreLabel, getScorePercentage } from "@/lib/ranking";
 import { getCurrentUser } from "@/lib/auth";
@@ -14,9 +16,21 @@ import Comment from "@/models/Comment";
 import SavedPlace from "@/models/SavedPlace";
 import VisitConfirmation from "@/models/VisitConfirmation";
 import { IMAGE_BLUR_PLACEHOLDER, optimizeCloudinaryUrl } from "@/lib/image";
+import { absoluteUrl } from "@/lib/site";
 
 interface PlaceDetailPageProps {
     params: Promise<{ city: string; id: string }>;
+}
+
+interface PlaceSeoData {
+    _id: unknown;
+    name: string;
+    city: string;
+    description: string;
+    category: string;
+    image_urls: string[];
+    status: string;
+    location?: { coordinates: [number, number] };
 }
 
 interface PlaceData {
@@ -47,6 +61,47 @@ const categoryClass: Record<string, string> = {
     "Hidden Gems": "badge-hidden",
     "Night Spots": "badge-night",
 };
+
+async function getPlaceForSeo(id: string): Promise<PlaceSeoData | null> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+
+    await connectDB();
+    return Place.findById(id)
+        .select("name city description category image_urls status location")
+        .lean<PlaceSeoData | null>();
+}
+
+export async function generateMetadata({ params }: PlaceDetailPageProps): Promise<Metadata> {
+    const { city, id } = await params;
+    const place = await getPlaceForSeo(id);
+    const canonical = absoluteUrl(`/${city}/place/${id}`);
+
+    if (!place || place.status !== "approved") {
+        return {
+            title: "Place Not Found - WhereToKolkata",
+            alternates: { canonical },
+        };
+    }
+
+    return {
+        title: `${place.name} - ${place.city} | WhereToKolkata`,
+        description: place.description.slice(0, 160),
+        alternates: { canonical },
+        openGraph: {
+            title: place.name,
+            description: place.description.slice(0, 160),
+            url: canonical,
+            type: "article",
+            images: [{ url: absoluteUrl(`/${city}/place/${id}/opengraph-image`) }],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: place.name,
+            description: place.description.slice(0, 160),
+            images: [absoluteUrl(`/${city}/place/${id}/opengraph-image`)],
+        },
+    };
+}
 
 function NotFoundState({ message }: { message: string }) {
     return (
@@ -116,7 +171,7 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
     await connectDB();
 
     const placeDoc = await Place.findById(id)
-        .select("name city description category tags best_time image_urls upvotes downvotes score status visit_confirmations created_by created_at")
+        .select("name city description category tags best_time image_urls upvotes downvotes score status visit_confirmations created_by created_at location")
         .populate("created_by", "username")
         .lean<{
             _id: unknown;
@@ -132,11 +187,12 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
             score: number;
             status: string;
             visit_confirmations: number;
+            location?: { coordinates: [number, number] };
             created_by?: { _id: unknown; username: string };
             created_at: Date | string;
         } | null>();
 
-    if (!placeDoc || placeDoc.status === "removed") {
+    if (!placeDoc || placeDoc.status !== "approved") {
         return <NotFoundState message="Place not found." />;
     }
 
@@ -163,7 +219,7 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
 
     const user = await getCurrentUser();
     const [initialCommentsRaw, userState] = await Promise.all([
-        Comment.find({ place_id: id })
+        Comment.find({ place_id: id, $or: [{ status: "active" }, { status: { $exists: false } }] })
             .sort({ upvotes: -1, created_at: -1 })
             .limit(20)
             .select("username text upvotes created_at")
@@ -196,10 +252,36 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
     const scoreLabel = getScoreLabel(place.score);
     const heroImage = place.image_urls[0] ? optimizeCloudinaryUrl(place.image_urls[0], 1200) : null;
     const galleryImages = place.image_urls.slice(1).map((url) => optimizeCloudinaryUrl(url, 600));
+    const schemaJson: Record<string, unknown> = {
+        "@context": "https://schema.org",
+        "@type": "Place",
+        name: place.name,
+        description: place.description,
+        image: place.image_urls.map((url) => optimizeCloudinaryUrl(url, 1200)),
+        url: absoluteUrl(`/${city}/place/${place._id}`),
+        address: {
+            "@type": "PostalAddress",
+            addressLocality: place.city,
+            addressCountry: "IN",
+        },
+    };
+
+    if (placeDoc.location?.coordinates) {
+        schemaJson.geo = {
+            "@type": "GeoCoordinates",
+            latitude: placeDoc.location.coordinates[1],
+            longitude: placeDoc.location.coordinates[0],
+        };
+    }
 
     return (
         <div className="page" style={{ paddingBottom: "calc(var(--mobile-nav-height) + var(--space-12))" }}>
             <div className="content-container">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+                />
+
                 {heroImage && (
                     <div className="place-hero-box">
                         <Image
@@ -309,6 +391,8 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
                                 </button>
                             </form>
                         )}
+
+                        <ReportButton targetType="place" targetId={place._id} />
                     </div>
 
                     <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-muted)", marginBottom: "var(--space-6)" }}>

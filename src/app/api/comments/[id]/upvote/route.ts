@@ -22,7 +22,11 @@ export async function POST(
         const { id } = await params;
         await connectDB();
 
-        const comment = await Comment.findByIdAndUpdate(id, { $inc: { upvotes: 1 } }, { new: true })
+        const comment = await Comment.findOneAndUpdate(
+            { _id: id, $or: [{ status: "active" }, { status: { $exists: false } }] },
+            { $inc: { upvotes: 1 } },
+            { new: true }
+        )
             .select("upvotes")
             .lean();
         if (!comment) {
