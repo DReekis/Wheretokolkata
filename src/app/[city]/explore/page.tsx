@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import PlaceCard from "@/components/PlaceCard";
+import TrendingSidebar from "@/components/TrendingSidebar";
 import { IconTrending, IconRecent, IconGem, IconChat, IconCompass } from "@/components/Icons";
 
 interface Place {
@@ -76,42 +77,50 @@ export default function ExplorePage() {
                     <p className="page-subtitle">Discover places the community loves</p>
                 </div>
 
-                {sections.map((section) => {
-                    if (!section.items || section.items.length === 0) return null;
-                    return (
-                        <div key={section.title} className="section">
-                            <h2 className="section-title">
-                                <span className="section-icon">{section.icon}</span>
-                                {section.title}
-                            </h2>
-                            <div className="section-grid">
-                                {section.items.map((place) => (
-                                    <PlaceCard
-                                        key={place._id}
-                                        _id={place._id}
-                                        name={place.name}
-                                        category={place.category}
-                                        score={place.score}
-                                        image_urls={place.image_urls}
-                                        tags={place.tags}
-                                        city={city}
-                                        visit_confirmations={place.visit_confirmations}
-                                        upvotes={place.upvotes}
-                                        downvotes={place.downvotes}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    );
-                })}
+                <div className="explore-layout">
+                    <div className="explore-main">
+                        {sections.map((section) => {
+                            if (!section.items || section.items.length === 0) return null;
+                            return (
+                                <div key={section.title} className="section">
+                                    <h2 className="section-title">
+                                        <span className="section-icon">{section.icon}</span>
+                                        {section.title}
+                                    </h2>
+                                    <div className="section-grid">
+                                        {section.items.map((place) => (
+                                            <PlaceCard
+                                                key={place._id}
+                                                _id={place._id}
+                                                name={place.name}
+                                                category={place.category}
+                                                score={place.score}
+                                                image_urls={place.image_urls}
+                                                tags={place.tags}
+                                                city={city}
+                                                visit_confirmations={place.visit_confirmations}
+                                                upvotes={place.upvotes}
+                                                downvotes={place.downvotes}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
 
-                {!data?.trending?.length && !data?.recent?.length && (
-                    <div className="empty-state">
-                        <div className="empty-state-icon"><IconCompass size={48} color="var(--text-muted)" /></div>
-                        <p className="empty-state-title">No places yet</p>
-                        <p>Be the first to add a special place in {cityName}!</p>
+                        {!data?.trending?.length && !data?.recent?.length && (
+                            <div className="empty-state">
+                                <div className="empty-state-icon"><IconCompass size={48} color="var(--text-muted)" /></div>
+                                <p className="empty-state-title">No places yet</p>
+                                <p>Be the first to add a special place in {cityName}!</p>
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    <aside className="explore-sidebar">
+                        <TrendingSidebar city={city} />
+                    </aside>
+                </div>
             </div>
         </div>
     );
