@@ -18,6 +18,9 @@ export default function LocationSearch({ onSelect }: LocationSearchProps) {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [searching, setSearching] = useState(false);
     const [locating, setLocating] = useState(false);
+    const [showCoordInput, setShowCoordInput] = useState(false);
+    const [coordText, setCoordText] = useState("");
+    const [coordError, setCoordError] = useState("");
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const searchPlaces = async (q: string) => {
@@ -76,6 +79,36 @@ export default function LocationSearch({ onSelect }: LocationSearchProps) {
         );
     };
 
+    const parseCoordinates = (text: string): { lat: number; lng: number } | null => {
+        const trimmed = text.trim();
+        if (!trimmed) return null;
+
+        // Try "lat, lng" or "lat lng" formats
+        const parts = trimmed.split(/[\s,]+/).filter(Boolean);
+        if (parts.length !== 2) return null;
+
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+
+        if (isNaN(lat) || isNaN(lng)) return null;
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+        return { lat, lng };
+    };
+
+    const handleCoordSubmit = () => {
+        setCoordError("");
+        const parsed = parseCoordinates(coordText);
+        if (!parsed) {
+            setCoordError("Invalid format. Use: 22.5726, 88.3639");
+            return;
+        }
+        onSelect(parsed.lat, parsed.lng, `${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`);
+        setQuery(`${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`);
+        setShowCoordInput(false);
+        setCoordText("");
+    };
+
     return (
         <div className="location-search">
             <div className="location-search-row">
@@ -102,6 +135,14 @@ export default function LocationSearch({ onSelect }: LocationSearchProps) {
                 >
                     {locating ? "Locating..." : <><IconMapPin size={14} /> My Location</>}
                 </button>
+                <button
+                    type="button"
+                    className={`btn btn-sm ${showCoordInput ? "btn-primary" : "btn-secondary"}`}
+                    onClick={() => { setShowCoordInput(!showCoordInput); setCoordError(""); }}
+                    title="Paste coordinates"
+                >
+                    📍 Coordinates
+                </button>
             </div>
 
             {results.length > 0 && (
@@ -112,6 +153,32 @@ export default function LocationSearch({ onSelect }: LocationSearchProps) {
                         </li>
                     ))}
                 </ul>
+            )}
+
+            {showCoordInput && (
+                <div className="location-search-coords-row">
+                    <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. 22.5726, 88.3639"
+                        value={coordText}
+                        onChange={(e) => { setCoordText(e.target.value); setCoordError(""); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCoordSubmit(); } }}
+                        autoFocus
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={handleCoordSubmit}
+                    >
+                        Go
+                    </button>
+                </div>
+            )}
+            {coordError && (
+                <span className="form-hint" style={{ color: "var(--danger)", marginTop: "var(--space-1)" }}>
+                    {coordError}
+                </span>
             )}
         </div>
     );

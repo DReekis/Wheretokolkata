@@ -1184,7 +1184,7 @@ ol {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);
-  z-index: 50;
+  z-index: 1100;
   max-height: 200px;
   overflow-y: auto;
 }
@@ -1205,6 +1205,21 @@ ol {
 .location-search-result:hover {
   background: var(--accent-light);
   color: var(--text-primary);
+}
+
+.location-search-coords-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.location-search-coords-row .form-input {
+  flex: 1;
+}
+
+.location-search-coords-row .btn {
+  flex-shrink: 0;
 }
 
 /* ==================== Image Upload ==================== */
